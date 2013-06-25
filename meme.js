@@ -2,27 +2,33 @@
 Meme.js
 =======
 
-Use one function to generate a meme.
+Use one function to generate a meme, returns a meme object to manipulate the text of the meme.
 
 You can call it all with strings:
 
-     Meme('dog.jpg', 'canvasID', 'Buy pizza, 'Pay in snakes');
+     var meme = Meme('dog.jpg', 'containerID', 'Buy pizza, 'Pay in snakes');
 
-Or with a selected canvas element:
+Or with a selected container element:
 
-     var canvas = document.getElementById('canvasID');
-     Meme('wolf.jpg', canvas, 'The time is now', 'to take what\'s yours');
+     var container = document.getElementById('containerID');
+     var meme = Meme('wolf.jpg', container, 'The time is now', 'to take what\'s yours');
 
 Or with a jQuery/Zepto selection:
 
-     Meme('spidey.jpg', $('#canvasID'), 'Did someone say', 'Spiderman JS?');
+     var meme = Meme('spidey.jpg', $('#containerID'), 'Did someone say', 'Spiderman JS?');
 
 You can also pass in an image:
 
      var img = new Image();
      img.src = 'insanity.jpg';
-     var can = document.getElementById('canvasID');
-     Meme(img, can, 'you ignore my calls', 'I ignore your screams of mercy');
+     var container = document.getElementById('containerID');
+     var meme = Meme(img, container, 'you ignore my calls', 'I ignore your screams of mercy');
+
+Once you have a meme object you can update it's text:
+		
+		meme.setText('Top text', 'Bottom text');
+
+The meme function dinamically creates and loads the canvas needed and insert them into the container element given.
 
 ********************************************************************************
 
@@ -47,37 +53,42 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 
-window.Meme = function(image, canvas, top, bottom) {
+window.Meme = function(image, container, topText, bottomText) {
 
-	/*
-	Default top and bottom
-	*/
-
-	top = top || '';
-	bottom = bottom || '';
 
 	/*
 	Deal with the canvas
 	*/
 
 	// If it's nothing, set it to a dummy value to trigger error
-	if (!canvas)
-		canvas = 0;
+	if (!container)
+		container = 0;
 
 	// If it's a string, conver it
-	if (canvas.toUpperCase)
-		canvas = document.getElementById(canvas);
+	if (container.toUpperCase)
+		container = document.getElementById(container);
 
 	// If it's jQuery or Zepto, convert it
-	if (($) && (canvas instanceof $))
-		canvas = canvas[0];
+	if (($) && (container instanceof $))
+		container = container[0];
 
 	// Throw error
-	if (!(canvas instanceof HTMLCanvasElement))
-		throw new Error('No canvas selected');
+	if (!(container instanceof HTMLElement))
+		throw new Error('No container selected');
+
+	var imageCanvas = document.createElement("CANVAS");
+	var textCanvas = document.createElement("CANVAS");
+	container.appendChild(imageCanvas);
+	container.appendChild(textCanvas);
+
+	container.style.position = "relative";
+	imageCanvas.style.position = textCanvas.style.position = "absolute";
+	imageCanvas.style.left = textCanvas.style.left = "0";
+	imageCanvas.style.top = textCanvas.style.top = "0";
 
 	// Get context
-	var context = canvas.getContext('2d');
+	var imageContext = imageCanvas.getContext('2d');
+	var textContext = textCanvas.getContext('2d');
 
 	/*
 	Deal with the image
@@ -96,8 +107,8 @@ window.Meme = function(image, canvas, top, bottom) {
 
 	// Set the proper width and height of the canvas
 	var setCanvasDimensions = function(w, h) {
-		canvas.width = w;
-		canvas.height = h;
+		imageCanvas.width = textCanvas.width = w;
+		imageCanvas.height = textCanvas.height = h;
 	};
 	setCanvasDimensions(image.width, image.height);	
 
@@ -106,8 +117,9 @@ window.Meme = function(image, canvas, top, bottom) {
 	*/
 
 	var drawText = function(text, topOrBottom, y) {
-
 		// Variable setup
+		var canvas = textCanvas;
+		var context = textContext;
 		topOrBottom = topOrBottom || 'top';
 		var fontSize = (canvas.height / 8);
 		var x = canvas.width / 2;
@@ -163,25 +175,31 @@ window.Meme = function(image, canvas, top, bottom) {
 	*/
 
 	image.onload = function() {
-
+		var canvas = imageCanvas;
 		// Set dimensions
 		setCanvasDimensions(this.width, this.height);
 
 		// Draw the image
-		context.drawImage(image, 0, 0);
+		imageContext.drawImage(image, 0, 0);
 
 		// Set up text variables
-		context.fillStyle = 'white';
-		context.strokeStyle = 'black';
-		context.lineWidth = 2;
+		textContext.fillStyle = 'white';
+		textContext.strokeStyle = 'black';
+		textContext.lineWidth = 2;
 		var fontSize = (canvas.height / 8);
-		context.font = fontSize + 'px Impact';
-		context.textAlign = 'center';
-
-		// Draw them!
-		drawText(top, 'top');
-		drawText(bottom, 'bottom');
+		textContext.font = fontSize + 'px Impact';
+		textContext.textAlign = 'center';
+		if (topText)
+			drawText(topText, 'top');
+		if (bottomText)
+			drawText(bottomText, 'bottom');
 
 	};
-
+	return {
+		setText: function(topText, bottomText) {
+			textContext.clearRect(0, 0, textCanvas.width, textCanvas.height);
+			drawText(topText, 'top');
+			drawText(bottomText, 'bottom');
+		}
+	};
 };

@@ -18,9 +18,10 @@
 		font: inherit;
 	}
 
-	#canvas {
+	#canvas-container {
 		display: block;
-		margin: 1em auto;
+		width: 900px;
+		margin: auto;
 	}
 
 	</style>
@@ -34,10 +35,10 @@
 
 	$.fn.ready(function() {
 
-		Meme('example.jpg', 'canvas');
+		var meme = Meme('example.jpg', 'canvas-container');
 
 		$('#top-line, #bottom-line').keyup(function() {
-			Meme('example.jpg', 'canvas', $('#top-line').val(), $('#bottom-line').val());
+			meme.setText($('#top-line').val(), $('#bottom-line').val());
 		});
 
 	});
@@ -53,7 +54,7 @@
 	<input id="top-line" placeholder="top line">
 	<input id="bottom-line" placeholder="bottom line">
 
-	<canvas id="canvas"></canvas>
+	<div id="canvas-container"></div>
 
 </body>
 </html>
